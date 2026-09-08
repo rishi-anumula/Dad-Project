@@ -1,10 +1,12 @@
 import React from 'react';
 import { useLedger } from '../context/LedgerContext';
+import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency } from '../utils/formatters';
-import { ArrowUpRight, ArrowDownLeft, Wallet, UserPlus, PlusCircle, Users } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Wallet, UserPlus, Users } from 'lucide-react';
 
-export function SummaryCards({ onAddCustomer, onAddTransaction }) {
+export function SummaryCards({ onAddCustomer }) {
   const { totalYouWillGet, totalYouWillGive, netBusinessBalance, customers } = useLedger();
+  const { t } = useLanguage();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -14,7 +16,7 @@ export function SummaryCards({ onAddCustomer, onAddTransaction }) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              You'll Get (Receivables)
+              {t('financial.totalYouWillGet')}
             </p>
             <h3 className="text-2xl sm:text-3xl font-extrabold text-gave-600 dark:text-gave-500 mt-1">
               {formatCurrency(totalYouWillGet)}
@@ -25,8 +27,8 @@ export function SummaryCards({ onAddCustomer, onAddTransaction }) {
           </div>
         </div>
         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-          <span>Amount customers owe you</span>
-          <span className="font-semibold text-gave-600 dark:text-gave-400">Pending collections</span>
+          <span>{t('financial.youWillGet')}</span>
+          <span className="font-semibold text-gave-600 dark:text-gave-400">Pending</span>
         </div>
       </div>
 
@@ -35,7 +37,7 @@ export function SummaryCards({ onAddCustomer, onAddTransaction }) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              You'll Give (Payables)
+              {t('financial.totalYouWillGive')}
             </p>
             <h3 className="text-2xl sm:text-3xl font-extrabold text-got-600 dark:text-got-500 mt-1">
               {formatCurrency(totalYouWillGive)}
@@ -46,8 +48,8 @@ export function SummaryCards({ onAddCustomer, onAddTransaction }) {
           </div>
         </div>
         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-          <span>Amount you owe to customers</span>
-          <span className="font-semibold text-got-600 dark:text-got-400">Advance/Credit</span>
+          <span>{t('financial.youWillGive')}</span>
+          <span className="font-semibold text-got-600 dark:text-got-400">Advance</span>
         </div>
       </div>
 
@@ -56,7 +58,7 @@ export function SummaryCards({ onAddCustomer, onAddTransaction }) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Net Business Balance
+              {t('financial.netBalance')}
             </p>
             <h3 className={`text-2xl sm:text-3xl font-extrabold mt-1 ${
               netBusinessBalance >= 0 
@@ -73,7 +75,7 @@ export function SummaryCards({ onAddCustomer, onAddTransaction }) {
         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <span className="flex items-center space-x-1">
             <Users className="w-3.5 h-3.5" />
-            <span>{customers.length} Customers</span>
+            <span>{customers.length} {t('nav.dashboard')}</span>
           </span>
           <div className="flex items-center space-x-2">
             <button
@@ -81,7 +83,7 @@ export function SummaryCards({ onAddCustomer, onAddTransaction }) {
               className="px-2.5 py-1 text-xs font-bold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors flex items-center space-x-1"
             >
               <UserPlus className="w-3 h-3" />
-              <span>Add Customer</span>
+              <span>{t('financial.quickAddCustomer')}</span>
             </button>
           </div>
         </div>
@@ -90,3 +92,4 @@ export function SummaryCards({ onAddCustomer, onAddTransaction }) {
     </div>
   );
 }
+

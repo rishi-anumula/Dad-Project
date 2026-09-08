@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { LedgerProvider } from './context/LedgerContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { Navbar } from './components/Navbar';
 import { SummaryCards } from './components/SummaryCards';
 import { AnalyticsCharts } from './components/AnalyticsCharts';
 import { CustomerList } from './components/CustomerList';
 import { LiveBullionRates } from './components/LiveBullionRates';
+import { ItemsCatalog } from './components/ItemsCatalog';
 import { CustomerDetailModal } from './components/CustomerDetailModal';
 import { AddCustomerModal } from './components/AddCustomerModal';
 import { AddTransactionModal } from './components/AddTransactionModal';
 import { BackupRestoreModal } from './components/BackupRestoreModal';
 
 function MainAppContent() {
-  const [activeTab, setActiveTab] = useState('DASHBOARD'); // 'DASHBOARD' | 'RATES'
+  const [activeTab, setActiveTab] = useState('DASHBOARD'); // 'DASHBOARD' | 'ITEMS' | 'RATES'
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
@@ -54,6 +56,9 @@ function MainAppContent() {
               onAddCustomer={() => setIsAddCustomerOpen(true)}
             />
           </>
+        ) : activeTab === 'ITEMS' ? (
+          /* Dedicated Jewelry Items Catalog View (/items) */
+          <ItemsCatalog />
         ) : (
           /* Dedicated Live Bullion Rates View */
           <LiveBullionRates />
@@ -106,8 +111,11 @@ function MainAppContent() {
 
 export default function App() {
   return (
-    <LedgerProvider>
-      <MainAppContent />
-    </LedgerProvider>
+    <LanguageProvider>
+      <LedgerProvider>
+        <MainAppContent />
+      </LedgerProvider>
+    </LanguageProvider>
   );
 }
+

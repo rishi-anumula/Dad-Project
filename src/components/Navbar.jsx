@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useLedger } from '../context/LedgerContext';
+import { useLanguage } from '../context/LanguageContext';
+import { LanguageSelector } from './LanguageSelector';
 import { 
   BookOpen, 
   Sun, 
@@ -10,7 +12,8 @@ import {
   Check, 
   Sparkles,
   Coins,
-  LayoutDashboard
+  LayoutDashboard,
+  Gem
 } from 'lucide-react';
 import { generateBusinessPdfReport } from '../utils/pdfGenerator';
 
@@ -22,8 +25,11 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
     setDarkMode, 
     customers, 
     seedSampleData,
-    bullionRates
+    bullionRates,
+    isLiveConnected
   } = useLedger();
+
+  const { t } = useLanguage();
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setTempTitle] = useState(businessName);
@@ -38,7 +44,7 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
   const gold24kRate = bullionRates?.gold24k?.perGram;
 
   return (
-    <header className="sticky top-0 z-30 glass-card border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <header className="sticky top-0 z-30 glass-card border-b border-slate-200 dark:border-slate-800 shadow-sm pt-[env(safe-area-inset-top,0px)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Brand & Business Title */}
@@ -78,7 +84,7 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
               </div>
             )}
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Jewelry Ledger & Bullion Manager
+              {t('nav.subBrand')}
             </p>
           </div>
         </div>
@@ -94,7 +100,19 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
             }`}
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
-            <span>Ledger Dashboard</span>
+            <span>{t('nav.dashboard')}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('ITEMS')}
+            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'ITEMS'
+                ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            }`}
+          >
+            <Gem className="w-3.5 h-3.5 text-amber-500" />
+            <span>{t('nav.itemsCatalog')}</span>
           </button>
 
           <button
@@ -106,10 +124,10 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
             }`}
           >
             <Coins className="w-3.5 h-3.5" />
-            <span>Live Bullion Rates</span>
+            <span>{t('nav.liveRates')}</span>
             {gold24kRate && (
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-600 text-white font-extrabold ml-1">
-                ₹{gold24kRate}/g
+              <span className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ml-1 ${isLiveConnected ? 'bg-amber-600 text-white' : 'bg-amber-800 text-amber-100'}`}>
+                ₹{gold24kRate}/g {!isLiveConnected && '• Cached'}
               </span>
             )}
           </button>
@@ -118,6 +136,9 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
         {/* Action Controls */}
         <div className="flex items-center space-x-2 sm:space-x-3">
 
+          {/* Language Selector Dropdown */}
+          <LanguageSelector />
+
           {/* Seed Demo Data Button */}
           <button
             onClick={seedSampleData}
@@ -125,7 +146,7 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
             title="Load sample customer demo data"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Load Demo</span>
+            <span>Demo</span>
           </button>
 
           {/* Download Business PDF Report */}
@@ -135,7 +156,7 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
             title="Download PDF Ledger Summary"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">PDF Report</span>
+            <span className="hidden sm:inline">PDF</span>
           </button>
 
           {/* Backup / Restore Modal Trigger */}
@@ -145,7 +166,7 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
             title="Backup or restore database"
           >
             <Database className="w-3.5 h-3.5 text-indigo-500" />
-            <span className="hidden sm:inline">Backup</span>
+            <span className="hidden sm:inline">{t('nav.backupRestore')}</span>
           </button>
 
           {/* Dark / Light Mode Toggle */}
@@ -170,7 +191,16 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
           }`}
         >
           <LayoutDashboard className="w-3.5 h-3.5" />
-          <span>Dashboard</span>
+          <span>{t('nav.dashboard')}</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('ITEMS')}
+          className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-bold ${
+            activeTab === 'ITEMS' ? 'bg-amber-600 text-white' : 'text-slate-600 dark:text-slate-400'
+          }`}
+        >
+          <Gem className="w-3.5 h-3.5" />
+          <span>{t('nav.itemsCatalog')}</span>
         </button>
         <button
           onClick={() => setActiveTab('RATES')}
@@ -179,9 +209,10 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
           }`}
         >
           <Coins className="w-3.5 h-3.5" />
-          <span>Live Rates</span>
+          <span>{t('nav.liveRates')}</span>
         </button>
       </div>
     </header>
   );
 }
+

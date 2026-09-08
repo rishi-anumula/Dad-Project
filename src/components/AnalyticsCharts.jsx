@@ -47,8 +47,9 @@ export function AnalyticsCharts() {
   };
 
   // Top 5 Customers by absolute balance
-  const sortedCustomers = [...customers]
-    .sort((a, b) => Math.abs(b.netBalance) - Math.abs(a.netBalance))
+  const safeCustomers = Array.isArray(customers) ? customers : [];
+  const sortedCustomers = [...safeCustomers]
+    .sort((a, b) => Math.abs(b?.netBalance || 0) - Math.abs(a?.netBalance || 0))
     .slice(0, 5);
 
   const barData = {

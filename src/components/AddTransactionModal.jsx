@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLedger } from '../context/LedgerContext';
+import { useLanguage } from '../context/LanguageContext';
 import { calculateMetalValuation } from '../utils/bullionRatesApi';
 import { 
   X, 
@@ -17,6 +18,7 @@ import {
 
 export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, onClose }) {
   const { addTransaction, bullionRates, selectedCity } = useLedger();
+  const { t } = useLanguage();
 
   const [type, setType] = useState(initialType);
   const [itemType, setItemType] = useState('JEWELRY'); // 'GENERAL' | 'JEWELRY'
@@ -30,8 +32,7 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 16));
   const [error, setError] = useState('');
 
-  // Get active per gram rate for selected purity
-  const activeRatePerGram = React.useMemo(() => {
+  const activeRatePerGram = useMemo(() => {
     if (!bullionRates) return 0;
     switch (purity) {
       case '24K': return bullionRates.gold24k?.perGram || 0;
@@ -43,7 +44,6 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
     }
   }, [purity, bullionRates]);
 
-  // Auto-calculate live whenever purity, weight, making charges or bullionRates update
   useEffect(() => {
     if (itemType === 'JEWELRY' && netWeightGrams && parseFloat(netWeightGrams) > 0 && bullionRates) {
       const computed = calculateMetalValuation(purity, parseFloat(netWeightGrams), parseFloat(makingCharges) || 0, bullionRates);
@@ -51,15 +51,13 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
     }
   }, [itemType, purity, netWeightGrams, makingCharges, bullionRates]);
 
-  if (!isOpen || !customer) return null;
-
-  const cityNameCaps = (selectedCity || 'hyderabad').toUpperCase();
-
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!customer?.id) return;
+    
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
-      setError('Please enter a valid total amount (> 0)');
+      setError(t('transactionModal.validAmountError'));
       return;
     }
 
@@ -87,6 +85,9 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
     onClose();
   };
 
+  if (!isOpen || !customer) return null;
+
+  const cityNameCaps = (selectedCity || 'hyderabad').toUpperCase();
   const isGave = type === 'GAVE';
 
   return (
@@ -101,12 +102,12 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
         }`}>
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Entry for {customer.name}
+              {t('transactionModal.entryFor')} {customer.name}
             </span>
             <h3 className={`text-xl font-extrabold ${
               isGave ? 'text-gave-600 dark:text-gave-400' : 'text-got-600 dark:text-got-400'
             }`}>
-              {isGave ? "YOU GAVE (Jewelry / Credit)" : "YOU GOT (Payment / Return)"}
+              {isGave ? t('transactionModal.youGaveTitle') : t('transactionModal.youGotTitle')}
             </h3>
           </div>
           <button
@@ -132,7 +133,7 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
               }`}
             >
               <MinusCircle className="w-4 h-4" />
-              <span>YOU GAVE ₹</span>
+              <span>{t('transactionModal.youGaveTab')}</span>
             </button>
 
             <button
@@ -145,14 +146,14 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
               }`}
             >
               <PlusCircle className="w-4 h-4" />
-              <span>YOU GOT ₹</span>
+              <span>{t('transactionModal.youGotTab')}</span>
             </button>
           </div>
 
           {/* Item Type Switcher: Standard vs Jewelry */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              Entry Type Category
+              {t('jewelry.itemType')}
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -165,7 +166,7 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
                 }`}
               >
                 <Gem className="w-4 h-4 text-amber-500" />
-                <span>Jewelry / Metal Item</span>
+                <span>{t('jewelry.jewelryMetalItem')}</span>
               </button>
 
               <button
@@ -178,7 +179,7 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
                 }`}
               >
                 <Tag className="w-4 h-4 text-indigo-500" />
-                <span>General Financial Entry</span>
+                <span>{t('jewelry.generalFinancialEntry')}</span>
               </button>
             </div>
           </div>
@@ -195,7 +196,7 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-xs font-extrabold text-amber-800 dark:text-amber-300 uppercase tracking-wider">
                   <Coins className="w-4 h-4 text-amber-500" />
-                  <span>Jewelry & Metal Specification</span>
+                  <span>{t('jewelry.jewelryMetalItem')}</span>
                 </div>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center space-x-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -207,7 +208,7 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
-                    Metal Category
+                    {t('jewelry.metalCategory')}
                   </label>
                   <select
                     value={category}
@@ -218,28 +219,28 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
                     }}
                     className="w-full px-3 py-2 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold"
                   >
-                    <option value="Gold Jewelry">Gold Jewelry</option>
-                    <option value="Silver Articles">Silver Articles</option>
-                    <option value="General Metal">General Metal / Other</option>
+                    <option value="Gold Jewelry">{t('jewelry.goldJewelry')}</option>
+                    <option value="Silver Articles">{t('jewelry.silverArticles')}</option>
+                    <option value="General Metal">{t('jewelry.generalMetal')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
-                    Item Article
+                    {t('jewelry.itemArticle')}
                   </label>
                   <select
                     value={jewelryCategory}
                     onChange={(e) => setJewelryCategory(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold"
                   >
-                    <option value="Gold Ring">Ring</option>
-                    <option value="Gold Chain">Chain</option>
-                    <option value="Gold Bangle">Bangle / Bracelet</option>
-                    <option value="Gold Necklace">Necklace Set</option>
-                    <option value="Coin/Bar">Bullion Coin / Bar</option>
-                    <option value="Silver Anklet">Silver Anklet (Payal)</option>
-                    <option value="Silver Utensil">Silver Utensil / Article</option>
+                    <option value="Gold Ring">{t('jewelry.ring')}</option>
+                    <option value="Gold Chain">{t('jewelry.chain')}</option>
+                    <option value="Gold Bangle">{t('jewelry.bangle')}</option>
+                    <option value="Gold Necklace">{t('jewelry.necklace')}</option>
+                    <option value="Coin/Bar">{t('jewelry.coinBar')}</option>
+                    <option value="Silver Anklet">{t('jewelry.anklet')}</option>
+                    <option value="Silver Utensil">{t('jewelry.utensil')}</option>
                   </select>
                 </div>
               </div>
@@ -248,24 +249,24 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
-                    Purity
+                    {t('jewelry.purity')}
                   </label>
                   <select
                     value={purity}
                     onChange={(e) => setPurity(e.target.value)}
                     className="w-full px-2.5 py-2 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold"
                   >
-                    <option value="24K">24K (99.9%)</option>
-                    <option value="22K">22K (91.6%)</option>
-                    <option value="18K">18K (75.0%)</option>
-                    <option value="999 Silver">999 Silver</option>
-                    <option value="925 Silver">925 Silver</option>
+                    <option value="24K">{t('jewelry.purity24k')}</option>
+                    <option value="22K">{t('jewelry.purity22k')}</option>
+                    <option value="18K">{t('jewelry.purity18k')}</option>
+                    <option value="999 Silver">{t('jewelry.purity999Silver')}</option>
+                    <option value="925 Silver">{t('jewelry.purity925Silver')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
-                    Net Weight (g) *
+                    {t('jewelry.netWeightGrams')} *
                   </label>
                   <input
                     type="number"
@@ -279,7 +280,7 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
 
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
-                    Making (₹)
+                    {t('jewelry.makingCharges')}
                   </label>
                   <input
                     type="number"
@@ -291,12 +292,11 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
                 </div>
               </div>
 
-              {/* Applied Domestic Rate Indicator */}
               {bullionRates && (
                 <div className="pt-1 text-[11px] text-amber-800 dark:text-amber-300 font-medium flex items-center justify-between border-t border-amber-200/40 dark:border-amber-900/30">
-                  <span>Applied Benchmark Rate ({cityNameCaps} - {purity}):</span>
+                  <span>{t('jewelry.appliedBenchmarkRate')} ({cityNameCaps} - {purity}):</span>
                   <span className="font-bold">
-                    ₹{activeRatePerGram} / gram
+                    ₹{activeRatePerGram} {t('jewelry.perGram')}
                   </span>
                 </div>
               )}
@@ -307,22 +307,21 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Total Amount (₹) *
+                {t('jewelry.totalAmount')} *
               </label>
 
-              {/* Quick Settle Full Balance Button */}
               {!isGave && customer.netBalance > 0 && (
                 <button
                   type="button"
                   onClick={() => {
                     setAmount(customer.netBalance.toString());
-                    setNote(prev => prev || `Full account settlement of ₹${customer.netBalance}`);
+                    setNote(prev => prev || `${t('financial.fullSettlement')} ₹${customer.netBalance}`);
                     setError('');
                   }}
                   className="text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 border border-emerald-300 dark:border-emerald-800 transition-all flex items-center space-x-1 shadow-sm"
                 >
                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                  <span>Settle Full Balance (₹{customer.netBalance})</span>
+                  <span>{t('transactionModal.settleFullBalance')} (₹{customer.netBalance})</span>
                 </button>
               )}
             </div>
@@ -340,22 +339,17 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 text-slate-900 dark:text-slate-100 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
-            {itemType === 'JEWELRY' && netWeightGrams && parseFloat(netWeightGrams) > 0 && (
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                Calculated: ({netWeightGrams}g × {cityNameCaps} {purity} Rate) + ₹{makingCharges || 0} making charges
-              </p>
-            )}
           </div>
 
           {/* Note / Remark */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              Remark / Description
+              {t('transactionModal.remarkLabel')}
             </label>
             <div className="relative">
               <FileText className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
               <textarea
-                placeholder="e.g. 22K Hallmark Chain (10g), Invoice #204..."
+                placeholder={t('transactionModal.remarkPlaceholder')}
                 rows={2}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -367,7 +361,7 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
           {/* Date & Time */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              Date & Time
+              {t('transactionModal.dateTimeLabel')}
             </label>
             <div className="relative">
               <Calendar className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -390,7 +384,7 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
                   : 'bg-got-600 hover:bg-got-700 shadow-got-500/20'
               }`}
             >
-              {isGave ? 'Save YOU GAVE Entry' : 'Save YOU GOT Entry'}
+              {isGave ? t('transactionModal.saveGaveButton') : t('transactionModal.saveGotButton')}
             </button>
           </div>
 
@@ -400,4 +394,3 @@ export function AddTransactionModal({ customer, initialType = 'GAVE', isOpen, on
     </div>
   );
 }
-

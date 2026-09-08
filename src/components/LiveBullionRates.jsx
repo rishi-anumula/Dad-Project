@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLedger } from '../context/LedgerContext';
+import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { calculateMetalValuation } from '../utils/bullionRatesApi';
 import { 
@@ -47,12 +48,12 @@ export function LiveBullionRates() {
     updateOverrideConfig
   } = useLedger();
 
-  // Calculator state
+  const { t } = useLanguage();
+
   const [calcPurity, setCalcPurity] = useState('22K');
   const [calcWeight, setCalcWeight] = useState('10');
   const [calcMaking, setCalcMaking] = useState('1200');
 
-  // Override Modal state
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
   const [tempConfig, setTempConfig] = useState({
     isOverride: false,
@@ -82,12 +83,12 @@ export function LiveBullionRates() {
     setIsOverrideModalOpen(false);
   };
 
-  if (!bullionRates) {
+  if (!bullionRates || !bullionRates.gold24k || !bullionRates.gold22k || !bullionRates.gold18k || !bullionRates.silver999 || !bullionRates.silver925) {
     return (
       <div className="py-16 text-center">
         <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mx-auto mb-2" />
         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-          Fetching live domestic market rates for {activeCityObj.name} (Goodreturns & IBJA)...
+          {t('liveRates.fetchingRatesPrompt')} ({activeCityObj?.name})...
         </p>
       </div>
     );
@@ -107,7 +108,7 @@ export function LiveBullionRates() {
           <MapPin className="w-5 h-5 text-amber-500 shrink-0" />
           <div>
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-              Trading Hub City Selector
+              {t('liveRates.selectCity')}
             </span>
             <span className="text-sm font-black text-slate-900 dark:text-white">
               {activeCityObj.name} Market Feed
@@ -144,7 +145,7 @@ export function LiveBullionRates() {
           }`}
         >
           <Star className={`w-3.5 h-3.5 ${isDefaultCityActive ? 'fill-amber-500 text-amber-500' : 'text-slate-400'}`} />
-          <span>{isDefaultCityActive ? 'Default Shop City' : `Set ${activeCityObj.name} as Default`}</span>
+          <span>{isDefaultCityActive ? t('liveRates.defaultShopCity') : `${activeCityObj.name}`}</span>
         </button>
 
       </div>
@@ -168,7 +169,7 @@ export function LiveBullionRates() {
             <div>
               <div className="flex items-center space-x-2 flex-wrap gap-1">
                 <h2 className="text-2xl font-black text-slate-900 dark:text-white">
-                  {overrideConfig.isOverride ? `${activeCityObj.name} Shop Benchmark (Locked)` : `${activeCityObj.name} Live Market Bullion Rates`}
+                  {overrideConfig.isOverride ? `${activeCityObj.name} ${t('liveRates.shopRateBenchmark')}` : `${activeCityObj.name} ${t('liveRates.title')}`}
                 </h2>
                 <span className={`flex items-center space-x-1 text-xs font-bold px-2.5 py-0.5 rounded-full border ${
                   overrideConfig.isOverride
@@ -177,14 +178,14 @@ export function LiveBullionRates() {
                       ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' 
                       : 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
                 }`}>
-                  <span className={`w-2 h-2 rounded-full ${overrideConfig.isOverride ? 'bg-purple-500' : 'bg-emerald-500 animate-pulse'}`}></span>
-                  <span>{overrideConfig.isOverride ? '🔒 Manual City Lock Active' : `🟢 ${activeCityObj.name} Live Feed`}</span>
+                  <span className={`w-2 h-2 rounded-full ${overrideConfig.isOverride ? 'bg-purple-500' : isLiveConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
+                  <span>{overrideConfig.isOverride ? t('liveRates.manualOverrideActive') : isLiveConnected ? `🟢 ${activeCityObj.name} ${t('liveRates.liveMarketFeed')}` : `🟡 Using cached rates`}</span>
                 </span>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 flex items-center space-x-2 flex-wrap gap-1">
                 <span className="flex items-center space-x-1">
                   <Clock className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{overrideConfig.isOverride ? 'Local Jeweler Association Lock' : `Last Refreshed: ${ratesLastUpdated ? formatDate(ratesLastUpdated) : 'Just now'}`}</span>
+                  <span>{overrideConfig.isOverride ? 'Local Jeweler Association Lock' : `${t('liveRates.lastUpdated')}: ${ratesLastUpdated ? formatDate(ratesLastUpdated) : 'Just now'}`}</span>
                 </span>
                 <span>•</span>
                 <span className="flex items-center space-x-1 text-slate-500">
@@ -201,7 +202,7 @@ export function LiveBullionRates() {
               className="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white shadow-md active:scale-95 transition-all"
             >
               <Sliders className="w-4 h-4 text-amber-400 dark:text-amber-600" />
-              <span>Set {activeCityObj.name} Shop Rate</span>
+              <span>{t('liveRates.setShopRateOverride')}</span>
             </button>
 
             <button
@@ -210,7 +211,7 @@ export function LiveBullionRates() {
               className="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-all shadow-sm active:scale-95 disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 text-amber-500 ${isRatesLoading ? 'animate-spin' : ''}`} />
-              <span>{isRatesLoading ? 'Syncing...' : 'Refresh Rates'}</span>
+              <span>{isRatesLoading ? t('liveRates.syncing') : t('liveRates.refreshRates')}</span>
             </button>
           </div>
 
@@ -221,7 +222,7 @@ export function LiveBullionRates() {
       <div>
         <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center space-x-2">
           <Flame className="w-4 h-4 text-amber-500" />
-          <span>{activeCityObj.name} Gold Rates (INR)</span>
+          <span>{activeCityObj.name} {t('liveRates.goldRatesHeadline')}</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -235,37 +236,26 @@ export function LiveBullionRates() {
                     24K
                   </span>
                   <h4 className="text-base font-bold text-slate-900 dark:text-white">
-                    99.9% Fine Gold
+                    {t('liveRates.gold24kTitle')}
                   </h4>
                 </div>
-
-                {gold24k.change && !overrideConfig.isOverride && (
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-md flex items-center space-x-1 ${
-                    gold24k.change.isUp 
-                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' 
-                      : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'
-                  }`}>
-                    {gold24k.change.isUp ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                    <span>{gold24k.change.diff >= 0 ? `+₹${gold24k.change.diff}` : `-₹${Math.abs(gold24k.change.diff)}`} ({gold24k.change.isUp ? '+' : ''}{gold24k.change.percent}%)</span>
-                  </span>
-                )}
               </div>
 
               <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">1 Gram (1g)</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.perGram')}</span>
                   <span className="text-lg font-extrabold text-amber-600 dark:text-amber-400">
                     {formatCurrency(gold24k.perGram)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">8 Grams (1 Sovereign / Pavan)</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.per8Grams')}</span>
                   <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
                     {formatCurrency(gold24k.per8g || gold24k.perGram * 8)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">10 Grams</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.per10Grams')}</span>
                   <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                     {formatCurrency(gold24k.per10g)}
                   </span>
@@ -283,37 +273,26 @@ export function LiveBullionRates() {
                     22K
                   </span>
                   <h4 className="text-base font-bold text-slate-900 dark:text-white">
-                    91.6% Hallmark Gold
+                    {t('liveRates.gold22kTitle')}
                   </h4>
                 </div>
-
-                {gold22k.change && !overrideConfig.isOverride && (
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-md flex items-center space-x-1 ${
-                    gold22k.change.isUp 
-                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' 
-                      : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'
-                  }`}>
-                    {gold22k.change.isUp ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                    <span>{gold22k.change.diff >= 0 ? `+₹${gold22k.change.diff}` : `-₹${Math.abs(gold22k.change.diff)}`} ({gold22k.change.isUp ? '+' : ''}{gold22k.change.percent}%)</span>
-                  </span>
-                )}
               </div>
 
               <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">1 Gram (1g)</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.perGram')}</span>
                   <span className="text-lg font-extrabold text-amber-600 dark:text-amber-400">
                     {formatCurrency(gold22k.perGram)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">8 Grams (1 Sovereign / Pavan)</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.per8Grams')}</span>
                   <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
                     {formatCurrency(gold22k.per8g || gold22k.perGram * 8)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">10 Grams</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.per10Grams')}</span>
                   <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                     {formatCurrency(gold22k.per10g)}
                   </span>
@@ -331,37 +310,26 @@ export function LiveBullionRates() {
                     18K
                   </span>
                   <h4 className="text-base font-bold text-slate-900 dark:text-white">
-                    75.0% Jewelry Gold
+                    {t('liveRates.gold18kTitle')}
                   </h4>
                 </div>
-
-                {gold18k.change && !overrideConfig.isOverride && (
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-md flex items-center space-x-1 ${
-                    gold18k.change.isUp 
-                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' 
-                      : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'
-                  }`}>
-                    {gold18k.change.isUp ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                    <span>{gold18k.change.diff >= 0 ? `+₹${gold18k.change.diff}` : `-₹${Math.abs(gold18k.change.diff)}`} ({gold18k.change.isUp ? '+' : ''}{gold18k.change.percent}%)</span>
-                  </span>
-                )}
               </div>
 
               <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">1 Gram (1g)</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.perGram')}</span>
                   <span className="text-lg font-extrabold text-amber-600 dark:text-amber-400">
                     {formatCurrency(gold18k.perGram)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">8 Grams (1 Sovereign / Pavan)</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.per8Grams')}</span>
                   <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
                     {formatCurrency(gold18k.per8g || gold18k.perGram * 8)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">10 Grams</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.per10Grams')}</span>
                   <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                     {formatCurrency(gold18k.per10g)}
                   </span>
@@ -377,7 +345,7 @@ export function LiveBullionRates() {
       <div>
         <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center space-x-2">
           <Gem className="w-4 h-4 text-slate-400" />
-          <span>{activeCityObj.name} Silver Rates (INR)</span>
+          <span>{activeCityObj.name} {t('liveRates.silverRatesHeadline')}</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -390,37 +358,26 @@ export function LiveBullionRates() {
                   999 Silver
                 </span>
                 <h4 className="text-base font-bold text-slate-900 dark:text-white">
-                  Fine Silver (99.9%)
+                  {t('liveRates.silver999Title')}
                 </h4>
               </div>
-
-              {silver999.change && !overrideConfig.isOverride && (
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-md flex items-center space-x-1 ${
-                  silver999.change.isUp 
-                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' 
-                    : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'
-                }`}>
-                  {silver999.change.isUp ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                  <span>{silver999.change.diff >= 0 ? `+₹${silver999.change.diff}` : `-₹${Math.abs(silver999.change.diff)}`} ({silver999.change.isUp ? '+' : ''}{silver999.change.percent}%)</span>
-                </span>
-              )}
             </div>
 
             <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Rate per Gram (1g)</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.perGram')}</span>
                 <span className="text-lg font-extrabold text-slate-700 dark:text-slate-300">
                   {formatCurrency(silver999.perGram)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Rate per 100 Grams (100g)</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.per100Grams')}</span>
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
                   {formatCurrency(silver999.per100g || silver999.perGram * 100)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Rate per 1 KG (1,000g)</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.per1Kg')}</span>
                 <span className="text-base font-extrabold text-slate-900 dark:text-white">
                   {formatCurrency(silver999.perKg)}
                 </span>
@@ -436,37 +393,26 @@ export function LiveBullionRates() {
                   925 Silver
                 </span>
                 <h4 className="text-base font-bold text-slate-900 dark:text-white">
-                  Sterling Silver (92.5%)
+                  {t('liveRates.silver925Title')}
                 </h4>
               </div>
-
-              {silver925.change && !overrideConfig.isOverride && (
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-md flex items-center space-x-1 ${
-                  silver925.change.isUp 
-                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' 
-                    : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'
-                }`}>
-                  {silver925.change.isUp ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                  <span>{silver925.change.diff >= 0 ? `+₹${silver925.change.diff}` : `-₹${Math.abs(silver925.change.diff)}`} ({silver925.change.isUp ? '+' : ''}{silver925.change.percent}%)</span>
-                </span>
-              )}
             </div>
 
             <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Rate per Gram (1g)</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.perGram')}</span>
                 <span className="text-lg font-extrabold text-slate-700 dark:text-slate-300">
                   {formatCurrency(silver925.perGram)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Rate per 100 Grams (100g)</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.per100Grams')}</span>
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
                   {formatCurrency(silver925.per100g || silver925.perGram * 100)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Rate per 1 KG (1,000g)</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{t('liveRates.per1Kg')}</span>
                 <span className="text-base font-extrabold text-slate-900 dark:text-white">
                   {formatCurrency(silver925.perKg)}
                 </span>
@@ -482,31 +428,31 @@ export function LiveBullionRates() {
         <div className="flex items-center space-x-2 mb-4">
           <Calculator className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-            {activeCityObj.name} Metal Valuation Calculator
+            {t('liveRates.calculatorTitle')}
           </h3>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              Select Purity
+              {t('jewelry.purity')}
             </label>
             <select
               value={calcPurity}
               onChange={(e) => setCalcPurity(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 text-slate-900 dark:text-slate-100 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
             >
-              <option value="24K">24K Fine Gold (99.9%)</option>
-              <option value="22K">22K Standard Gold (91.6%)</option>
-              <option value="18K">18K Jewelry Gold (75.0%)</option>
-              <option value="999 Silver">999 Fine Silver (99.9%)</option>
-              <option value="925 Silver">925 Sterling Silver (92.5%)</option>
+              <option value="24K">{t('jewelry.purity24k')}</option>
+              <option value="22K">{t('jewelry.purity22k')}</option>
+              <option value="18K">{t('jewelry.purity18k')}</option>
+              <option value="999 Silver">{t('jewelry.purity999Silver')}</option>
+              <option value="925 Silver">{t('jewelry.purity925Silver')}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              Net Weight (Grams)
+              {t('jewelry.netWeightGrams')}
             </label>
             <input
               type="number"
@@ -520,7 +466,7 @@ export function LiveBullionRates() {
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              Making Charges / Wastage (₹)
+              {t('jewelry.makingCharges')} (₹)
             </label>
             <input
               type="number"
@@ -536,11 +482,8 @@ export function LiveBullionRates() {
         <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-indigo-500/15 border border-amber-300/50 dark:border-amber-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <span className="text-xs font-bold uppercase text-slate-600 dark:text-slate-300">
-              Estimated {activeCityObj.name} Market Valuation:
+              {t('liveRates.estimatedValuation')} ({activeCityObj.name}):
             </span>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Based on {calcPurity} @ {activeCityObj.name} rate + ₹{calcMaking || 0} making charges
-            </p>
           </div>
           <div className="text-right">
             <span className="text-2xl font-black text-amber-600 dark:text-amber-400">
@@ -709,5 +652,3 @@ export function LiveBullionRates() {
     </div>
   );
 }
-
-

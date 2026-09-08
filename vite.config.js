@@ -335,10 +335,17 @@ function liveBullionApiPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './',
   plugins: [react(), liveBullionApiPlugin()],
   server: {
     port: 3000,
     open: true
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    emptyOutDir: true
   }
 })
 
