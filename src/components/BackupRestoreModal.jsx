@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useLedger } from '../context/LedgerContext';
-import { X, Database, Download, Upload, AlertCircle, CheckCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { X, Database, Download, Upload, AlertCircle, CheckCircle, KeyRound, Fingerprint, User, LogOut } from 'lucide-react';
 
 export function BackupRestoreModal({ isOpen, onClose }) {
   const { exportBackup, importBackup } = useLedger();
@@ -127,9 +129,173 @@ export function BackupRestoreModal({ isOpen, onClose }) {
             </button>
           </div>
 
+          {/* Security & Store PIN Settings Section */}
+          <SecuritySettingsSection />
+
         </div>
 
       </div>
+    </div>
+  );
+}
+
+function SecuritySettingsSection() {
+  const { 
+    user,
+    logout,
+    shopProfile, 
+    requireBiometricOnResume,
+    toggleRequireBiometricOnResume,
+    setupBackupPin
+  } = useAuth();
+  const { t } = useLanguage();
+  const [isChangingPin, setIsChangingPin] = useState(false);
+  const [currentPin, setCurrentPin] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [pinFeedback, setPinFeedback] = useState(null);
+
+  const handlePinUpdate = async (e) => {
+    e.preventDefault();
+    setPinFeedback(null);
+    const res = await setupBackupPin(newPin);
+    if (res.success) {
+      setPinFeedback({ type: 'success', text: t('auth.pinChangedSuccess') || 'Security PIN updated successfully!' });
+      setCurrentPin('');
+      setNewPin('');
+      setTimeout(() => {
+        setIsChangingPin(false);
+        setPinFeedback(null);
+      }, 1500);
+    } else {
+      setPinFeedback({ type: 'error', text: res.error || 'Failed to update PIN.' });
+    }
+  };
+
+  return (
+    <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
+      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center space-x-2">
+        <KeyRound className="w-4 h-4 text-amber-500" />
+        <span>{t('auth.storeSecuritySettings') || 'Store Security & PIN Protection'}</span>
+      </h4>
+
+      {/* Connected Google Account */}
+      {user && (
+        <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between">
+          <div className="flex items-center space-x-2.5 min-w-0">
+            {user.avatar ? (
+              <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-amber-400 shrink-0" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500 shrink-0">
+                <User className="w-4 h-4" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{user.name || 'Google Account'}</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[11px] font-bold border border-rose-500/30 transition-all flex items-center space-x-1 shrink-0"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Logout</span>
+          </button>
+        </div>
+      )}
+
+      {/* Require Biometric / PIN on App Resume Toggle */}
+      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center space-x-1.5">
+            <Fingerprint className="w-3.5 h-3.5 text-amber-500" />
+            <span>{t('auth.biometricSettingsTitle') || 'Biometric / Fingerprint Unlock'}</span>
+          </p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            {t('auth.biometricSettingsDesc') || 'Lock with fingerprint or PIN whenever app resumes from background'}
+          </p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer shrink-0">
+          <input
+            type="checkbox"
+            checked={requireBiometricOnResume}
+            onChange={(e) => toggleRequireBiometricOnResume(e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+        </label>
+      </div>
+
+      {/* Change PIN toggle button */}
+      {!isChangingPin ? (
+        <button
+          type="button"
+          onClick={() => setIsChangingPin(true)}
+          className="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all"
+        >
+          <KeyRound className="w-3.5 h-3.5 text-amber-500" />
+          <span>{t('auth.changePin') || 'Change Master PIN'}</span>
+        </button>
+      ) : (
+        <form onSubmit={handlePinUpdate} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{t('auth.changeCounterPin') || 'Change Counter PIN'}</span>
+            <button
+              type="button"
+              onClick={() => setIsChangingPin(false)}
+              className="text-[11px] text-slate-400 hover:text-slate-600"
+            >
+              {t('auth.cancel') || 'Cancel'}
+            </button>
+          </div>
+
+          {pinFeedback && (
+            <div className={`p-2 rounded-lg text-[11px] font-semibold flex items-center space-x-1.5 ${
+              pinFeedback.type === 'success' 
+                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' 
+                : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+            }`}>
+              {pinFeedback.type === 'success' ? <CheckCircle className="w-3.5 h-3.5 shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 shrink-0" />}
+              <span>{pinFeedback.text}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{t('auth.currentPinLabel') || 'Current PIN'}</label>
+              <input
+                type="password"
+                maxLength={4}
+                value={currentPin}
+                onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, ''))}
+                placeholder="••••"
+                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-mono font-bold text-center bg-white dark:bg-slate-900"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">{t('auth.newPinLabel') || 'New 4-Digit PIN'}</label>
+              <input
+                type="password"
+                maxLength={4}
+                value={newPin}
+                onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                placeholder="••••"
+                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-mono font-bold text-center bg-white dark:bg-slate-900"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm transition-all"
+          >
+            {t('auth.updatePin') || 'Update PIN'}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

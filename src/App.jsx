@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
+import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { LedgerProvider } from './context/LedgerContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { AuthProvider } from './context/AuthContext';
+import { AuthGuard } from './components/AuthGuard';
+import { GoogleLoginScreen } from './components/GoogleLoginScreen';
+import { BiometricPinOverlay } from './components/BiometricPinOverlay';
+import { LandingPage } from './components/LandingPage';
 import { Navbar } from './components/Navbar';
 import { SummaryCards } from './components/SummaryCards';
 import { AnalyticsCharts } from './components/AnalyticsCharts';
@@ -13,7 +19,24 @@ import { AddTransactionModal } from './components/AddTransactionModal';
 import { BackupRestoreModal } from './components/BackupRestoreModal';
 
 function MainAppContent() {
-  const [activeTab, setActiveTab] = useState('DASHBOARD'); // 'DASHBOARD' | 'ITEMS' | 'RATES'
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Sync active view with route URL
+  const getTabFromPath = (path) => {
+    if (path === '/catalog' || path === '/items') return 'ITEMS';
+    if (path === '/rates') return 'RATES';
+    return 'DASHBOARD';
+  };
+
+  const activeTab = getTabFromPath(location.pathname);
+
+  const handleSetActiveTab = (tab) => {
+    if (tab === 'ITEMS') navigate('/catalog');
+    else if (tab === 'RATES') navigate('/rates');
+    else navigate('/dashboard');
+  };
+
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
@@ -33,7 +56,7 @@ function MainAppContent() {
       {/* Top Navbar with Navigation Tabs */}
       <Navbar 
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleSetActiveTab}
         onOpenBackupModal={() => setIsBackupOpen(true)} 
       />
 
@@ -57,10 +80,10 @@ function MainAppContent() {
             />
           </>
         ) : activeTab === 'ITEMS' ? (
-          /* Dedicated Jewelry Items Catalog View (/items) */
+          /* Dedicated Jewelry Items Catalog View (/catalog) */
           <ItemsCatalog />
         ) : (
-          /* Dedicated Live Bullion Rates View */
+          /* Dedicated Live Bullion Rates View (/rates) */
           <LiveBullionRates />
         )}
 
@@ -105,6 +128,9 @@ function MainAppContent() {
         onClose={() => setIsBackupOpen(false)}
       />
 
+      {/* Persistent Biometric / Fingerprint & PIN Lock Overlay */}
+      <BiometricPinOverlay />
+
     </div>
   );
 }
@@ -113,9 +139,62 @@ export default function App() {
   return (
     <LanguageProvider>
       <LedgerProvider>
-        <MainAppContent />
+        <AuthProvider>
+          <HashRouter>
+            <Routes>
+              {/* Public Google Sign-In Screen */}
+              <Route path="/login" element={<GoogleLoginScreen />} />
+              <Route path="/landing" element={<LandingPage />} />
+
+              {/* Protected Dashboard & Ledger Routes */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <AuthGuard>
+                    <MainAppContent />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/customers" 
+                element={
+                  <AuthGuard>
+                    <MainAppContent />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/catalog" 
+                element={
+                  <AuthGuard>
+                    <MainAppContent />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/items" 
+                element={
+                  <AuthGuard>
+                    <MainAppContent />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/rates" 
+                element={
+                  <AuthGuard>
+                    <MainAppContent />
+                  </AuthGuard>
+                } 
+              />
+
+              {/* Default & Wildcard Redirects */}
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </HashRouter>
+        </AuthProvider>
       </LedgerProvider>
     </LanguageProvider>
   );
 }
-

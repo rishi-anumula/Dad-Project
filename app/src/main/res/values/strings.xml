@@ -1,7 +1,0 @@
-<resources>
-    <string name="app_name">Jewelry Khatabook Ledger</string>
-    <string name="error_icon_desc">Connection Alert</string>
-    <string name="error_connection_title">No Internet Connection</string>
-    <string name="error_connection_msg">Please check your network settings and tap retry to load the ledger app.</string>
-    <string name="btn_retry">Retry Connection</string>
-</resources>

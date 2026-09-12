@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLedger } from '../context/LedgerContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { LanguageSelector } from './LanguageSelector';
 import { 
   BookOpen, 
@@ -10,10 +12,12 @@ import {
   Database, 
   Edit2, 
   Check, 
-  Sparkles,
-  Coins,
-  LayoutDashboard,
-  Gem
+  Sparkles, 
+  Coins, 
+  LayoutDashboard, 
+  Gem,
+  Lock,
+  LogOut
 } from 'lucide-react';
 import { generateBusinessPdfReport } from '../utils/pdfGenerator';
 
@@ -30,6 +34,18 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
   } = useLedger();
 
   const { t } = useLanguage();
+  const { lockApp, logout, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLockApp = () => {
+    lockApp();
+    navigate('/login');
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setTempTitle] = useState(businessName);
@@ -176,6 +192,26 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
             title="Toggle theme mode"
           >
             {darkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5" />}
+          </button>
+
+          {/* Lock Screen Button */}
+          <button
+            onClick={handleLockApp}
+            className="p-2 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 border border-transparent hover:border-amber-200 dark:hover:border-amber-900 transition-all flex items-center space-x-1"
+            title="Lock Counter Screen"
+          >
+            <Lock className="w-4 h-4" />
+            <span className="hidden xl:inline text-xs font-bold">Lock</span>
+          </button>
+
+          {/* Explicit Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="p-2 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-900 transition-all flex items-center space-x-1"
+            title="Sign Out / Switch Store Account"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden xl:inline text-xs font-bold">Sign Out</span>
           </button>
 
         </div>
