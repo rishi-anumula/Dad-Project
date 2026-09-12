@@ -15,6 +15,8 @@ const CITY_BENCHMARKS = {
   ahmedabad: { name: 'Ahmedabad', g24: 16303, g22: 14945, g18: 12229, s999: 260 }
 };
 
+const BACKEND_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'https://jewel-ledger.onrender.com').replace(/\/$/, '');
+
 export async function fetchLiveBullionRates(citySlug = 'hyderabad') {
   const city = (citySlug || 'hyderabad').toLowerCase();
   const CACHE_STORAGE_KEY = `khatabook_cached_rates_${city}`;
@@ -22,10 +24,14 @@ export async function fetchLiveBullionRates(citySlug = 'hyderabad') {
   // 1. Try to fetch live rates if browser has network connection
   if (navigator.onLine !== false) {
     try {
-      // Primary: Call server domestic rate scraper endpoint with city query
-      let res = await fetch(`/api/rates?city=${city}`, { cache: 'no-store' });
+      // Primary: Call deployed Render backend endpoint with city query
+      let res = await fetch(`${BACKEND_BASE_URL}/api/rates?city=${city}`, { cache: 'no-store' });
       if (!res.ok) {
-        res = await fetch(`/api/live-rates?city=${city}`, { cache: 'no-store' });
+        res = await fetch(`${BACKEND_BASE_URL}/api/live-rates?city=${city}`, { cache: 'no-store' });
+      }
+      if (!res.ok) {
+        // Local relative fallback
+        res = await fetch(`/api/rates?city=${city}`, { cache: 'no-store' });
       }
       if (res.ok) {
         const data = await res.json();
