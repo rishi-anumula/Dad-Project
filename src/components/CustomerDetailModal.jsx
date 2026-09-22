@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency, formatDate, buildWhatsAppReminderUrl, formatPhoneForCalling, buildWhatsAppBillUrl } from '../utils/formatters';
 import { generateCustomerPdfReport } from '../utils/pdfGenerator';
 import { AddJewelryItemSaleModal } from './AddJewelryItemSaleModal';
+import { JewelryPdfStatementModal } from './JewelryPdfStatementModal';
 import { 
   X, 
   Phone, 
@@ -165,6 +166,7 @@ export function CustomerDetailModal({ customer, onClose, onAddTransaction }) {
   const { t } = useLanguage();
   
   const [isItemSaleOpen, setIsItemSaleOpen] = useState(false);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [isQuickPickerOpen, setIsQuickPickerOpen] = useState(true);
   const [catalogSearchText, setCatalogSearchText] = useState('');
   const [txSearchText, setTxSearchText] = useState('');
@@ -373,10 +375,11 @@ export function CustomerDetailModal({ customer, onClose, onAddTransaction }) {
               )}
 
               <button
-                onClick={() => generateCustomerPdfReport(customer, customerTransactions, businessName)}
+                onClick={() => setIsPdfModalOpen(true)}
                 className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                title="Generate High-Resolution Multi-Language PDF Statement"
               >
-                <FileText className="w-4 h-4 text-indigo-500" />
+                <FileText className="w-4 h-4 text-amber-500" />
                 <span>{t('customerDetailModal.pdfStatement')}</span>
               </button>
             </div>
@@ -521,6 +524,15 @@ export function CustomerDetailModal({ customer, onClose, onAddTransaction }) {
         customer={customer}
         isOpen={isItemSaleOpen}
         onClose={() => setIsItemSaleOpen(false)}
+      />
+
+      {/* High-Resolution Indic PDF Statement Modal */}
+      <JewelryPdfStatementModal
+        customer={customer}
+        transactions={customerTransactions}
+        businessName={businessName}
+        isOpen={isPdfModalOpen}
+        onClose={() => setIsPdfModalOpen(false)}
       />
     </div>
   );
