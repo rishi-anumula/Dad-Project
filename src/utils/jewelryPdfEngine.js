@@ -38,19 +38,45 @@ export async function exportElementToPdf(element, filename = 'Jewelry_Statement.
   if (onProgress) onProgress('RENDERING_CANVAS');
 
   // Render high-res canvas (scale 2.0 provides 300+ DPI equivalent sharpness)
+  // Fix mobile/scaled viewports by enforcing exact 800px A4 canvas geometry
   const canvas = await html2canvasPro(element, {
     scale: 2,
     useCORS: true,
     allowTaint: true,
     logging: false,
     backgroundColor: '#ffffff',
-    windowWidth: element.scrollWidth || 800,
+    windowWidth: 800,
+    width: 800,
     onclone: (clonedDoc) => {
-      // Ensure cloned elements retain pristine styling and no scrollbars
+      // Find the target printable element
       const clonedEl = clonedDoc.querySelector('[data-pdf-content="true"]');
       if (clonedEl) {
+        // Reset any responsive zoom/scaling transforms from ancestors in cloned document
+        let parent = clonedEl.parentElement;
+        while (parent && parent !== clonedDoc.body) {
+          parent.style.transform = 'none';
+          parent.style.scale = 'none';
+          parent.style.width = 'auto';
+          parent.style.height = 'auto';
+          parent = parent.parentElement;
+        }
+
+        // Force body and cloned document to standard 800px width
+        if (clonedDoc.body) {
+          clonedDoc.body.style.width = '800px';
+          clonedDoc.body.style.minWidth = '800px';
+          clonedDoc.body.style.margin = '0';
+          clonedDoc.body.style.padding = '0';
+        }
+
+        // Ensure printable element retains pristine unscaled 800px styling
         clonedEl.style.display = 'block';
         clonedEl.style.visibility = 'visible';
+        clonedEl.style.transform = 'none';
+        clonedEl.style.width = '800px';
+        clonedEl.style.minWidth = '800px';
+        clonedEl.style.maxWidth = '800px';
+        clonedEl.style.margin = '0 auto';
       }
     }
   });

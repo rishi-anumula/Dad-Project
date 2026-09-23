@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { 
   X, 
   Download, 
@@ -14,7 +14,10 @@ import {
   MapPin, 
   Languages, 
   Loader2,
-  Sparkles
+  Sparkles,
+  ZoomIn,
+  ZoomOut,
+  Maximize2
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { exportElementToPdf, ensureFontsLoaded } from '../utils/jewelryPdfEngine';
@@ -181,6 +184,12 @@ export function JewelryPdfStatementModal({
   const [exportStep, setExportStep] = useState('');
   
   const printContainerRef = useRef(null);
+  const viewportRef = useRef(null);
+
+  const [containerWidth, setContainerWidth] = useState(800);
+  const [zoomMode, setZoomMode] = useState('fit'); // 'fit' | 'custom'
+  const [customScale, setCustomScale] = useState(1);
+  const [contentHeight, setContentHeight] = useState(1123);
 
   // Filter transactions belonging to this customer
   const custTransactions = useMemo(() => {
@@ -222,6 +231,73 @@ export function JewelryPdfStatementModal({
 
   const labels = STATEMENT_LABELS[lang] || STATEMENT_LABELS.multi;
 
+  // Measure available preview width to calculate auto-fit scale
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const updateDimensions = () => {
+      if (viewportRef.current) {
+        const width = viewportRef.current.clientWidth;
+        if (width > 0) {
+          setContainerWidth(width);
+        }
+      }
+      if (printContainerRef.current) {
+        const height = printContainerRef.current.scrollHeight;
+        if (height > 0) {
+          setContentHeight(height);
+        }
+      }
+    };
+
+    updateDimensions();
+    const timer = setTimeout(updateDimensions, 100);
+
+    let resizeObserver;
+    if (window.ResizeObserver && viewportRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        updateDimensions();
+      });
+      resizeObserver.observe(viewportRef.current);
+    }
+
+    window.addEventListener('resize', updateDimensions);
+    return () => {
+      clearTimeout(timer);
+      if (resizeObserver) resizeObserver.disconnect();
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, [isOpen, lang, custTransactions.length]);
+
+  // Calculate proportional fit-to-screen scale (800px standard A4 sheet)
+  const fitScale = useMemo(() => {
+    const padding = containerWidth < 640 ? 16 : 48;
+    const availableWidth = Math.max(240, containerWidth - padding);
+    const computed = availableWidth / 800;
+    return Math.min(1.0, Math.max(0.32, Math.round(computed * 100) / 100));
+  }, [containerWidth]);
+
+  const activeScale = zoomMode === 'fit' ? fitScale : customScale;
+
+  const handleZoomIn = () => {
+    setZoomMode('custom');
+    setCustomScale(prev => Math.min(1.5, Math.round((activeScale + 0.15) * 100) / 100));
+  };
+
+  const handleZoomOut = () => {
+    setZoomMode('custom');
+    setCustomScale(prev => Math.max(0.32, Math.round((activeScale - 0.15) * 100) / 100));
+  };
+
+  const handleToggleFit = () => {
+    if (zoomMode === 'fit') {
+      setZoomMode('custom');
+      setCustomScale(1.0);
+    } else {
+      setZoomMode('fit');
+    }
+  };
+
   // Trigger High-Resolution PDF Download
   const handleDownloadPdf = async () => {
     if (!printContainerRef.current) return;
@@ -251,38 +327,51 @@ export function JewelryPdfStatementModal({
   if (!isOpen || !customer) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto animate-fade-in">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl max-w-5xl w-full max-h-[96vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto">
+    <div className="pdf-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-hidden animate-fade-in">
+      <div className="pdf-modal-card bg-white dark:bg-slate-900 rounded-none sm:rounded-3xl max-w-5xl w-full h-full sm:h-auto sm:max-h-[96vh] flex flex-col shadow-2xl border-0 sm:border border-slate-200 dark:border-slate-800 overflow-hidden">
         
         {/* Top Control Bar (Non-printed modal controls) */}
-        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center font-black">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h3 className="text-base sm:text-lg font-black tracking-tight text-white">
-                  Jewelry Statement Export
-                </h3>
-                <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded bg-amber-500/30 text-amber-300 border border-amber-500/50">
-                  HD Indic PDF
-                </span>
+        <div className="no-print p-3 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-900 text-white flex-shrink-0 space-y-2.5">
+          {/* Header Row: Title & Close Button */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2.5 min-w-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center font-black flex-shrink-0">
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <p className="text-xs text-slate-300">
-                A4 Vector-Canvas capture for Telugu (తెలుగు), Hindi (हिन्दी) & Rupee (₹) symbols
-              </p>
+              <div className="min-w-0">
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-sm sm:text-lg font-black tracking-tight text-white truncate">
+                    Jewelry Statement Export
+                  </h3>
+                  <span className="text-[9px] sm:text-[10px] uppercase font-extrabold px-1.5 sm:px-2 py-0.5 rounded bg-amber-500/30 text-amber-300 border border-amber-500/50 flex-shrink-0">
+                    A4 Indic HD
+                  </span>
+                </div>
+                <p className="text-[10px] sm:text-xs text-slate-400 hidden sm:block truncate">
+                  A4 Vector-Canvas capture for Telugu (తెలుగు), Hindi (हिन्दी) & Rupee (₹) symbols
+                </p>
+              </div>
             </div>
+
+            {/* Close Button */}
+            <button
+              onClick={onClose}
+              disabled={isExporting}
+              className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors flex-shrink-0"
+              title="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Language Selector & Actions */}
-          <div className="flex items-center flex-wrap gap-2">
-            {/* Language Picker */}
-            <div className="flex items-center rounded-xl bg-slate-800 p-1 border border-slate-700 text-xs">
-              <Languages className="w-3.5 h-3.5 ml-2 mr-1 text-slate-400" />
+          {/* Action Row: Languages & Action Buttons */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
+            {/* Language Switcher */}
+            <div className="flex items-center rounded-xl bg-slate-800/90 p-0.5 sm:p-1 border border-slate-700/80 text-[11px] sm:text-xs overflow-x-auto max-w-full">
+              <Languages className="w-3 h-3 sm:w-3.5 sm:h-3.5 ml-1.5 mr-1 text-slate-400 flex-shrink-0" />
               <button
                 onClick={() => setLang('multi')}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                className={`px-2 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
                   lang === 'multi' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'
                 }`}
               >
@@ -290,7 +379,7 @@ export function JewelryPdfStatementModal({
               </button>
               <button
                 onClick={() => setLang('te')}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                className={`px-2 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
                   lang === 'te' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'
                 }`}
               >
@@ -298,7 +387,7 @@ export function JewelryPdfStatementModal({
               </button>
               <button
                 onClick={() => setLang('hi')}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                className={`px-2 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
                   lang === 'hi' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'
                 }`}
               >
@@ -306,7 +395,7 @@ export function JewelryPdfStatementModal({
               </button>
               <button
                 onClick={() => setLang('en')}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                className={`px-2 py-1 rounded-lg font-bold transition-all whitespace-nowrap ${
                   lang === 'en' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-300 hover:text-white'
                 }`}
               >
@@ -314,68 +403,109 @@ export function JewelryPdfStatementModal({
               </button>
             </div>
 
-            {/* Print Button */}
-            <button
-              onClick={handlePrint}
-              disabled={isExporting}
-              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center space-x-1.5 transition-colors"
-              title="Native Browser Print"
-            >
-              <Printer className="w-4 h-4" />
-              <span className="hidden sm:inline">Print</span>
-            </button>
+            {/* Zoom Controls & Action Buttons */}
+            <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
+              {/* Zoom Controls */}
+              <div className="flex items-center rounded-xl bg-slate-800/90 p-0.5 sm:p-1 border border-slate-700/80 text-xs">
+                <button
+                  onClick={handleZoomOut}
+                  disabled={isExporting || activeScale <= 0.35}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-40 transition-colors"
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={handleToggleFit}
+                  className="px-2 py-0.5 text-[11px] font-bold text-slate-200 hover:text-white hover:bg-slate-700 rounded transition-colors whitespace-nowrap"
+                  title={zoomMode === 'fit' ? 'Switch to 100% Size' : 'Switch to Fit to Screen'}
+                >
+                  {zoomMode === 'fit' ? `Fit (${Math.round(fitScale * 100)}%)` : `${Math.round(activeScale * 100)}%`}
+                </button>
+                <button
+                  onClick={handleZoomIn}
+                  disabled={isExporting || activeScale >= 1.5}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-40 transition-colors"
+                  title="Zoom In"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-            {/* Download PDF Button */}
-            <button
-              onClick={handleDownloadPdf}
-              disabled={isExporting}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-black flex items-center space-x-2 shadow-lg shadow-amber-500/20 active:scale-95 transition-all disabled:opacity-50"
-            >
-              {isExporting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>
-                    {exportStep === 'PREPARING_FONTS' && 'Loading Fonts...'}
-                    {exportStep === 'RENDERING_CANVAS' && 'Rendering Telugu/Hindi...'}
-                    {exportStep === 'COMPILING_PDF' && 'Compiling A4 PDF...'}
-                    {exportStep === 'SAVING' && 'Saving...'}
-                    {!exportStep && 'Generating...'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" />
-                  <span>Download PDF (A4)</span>
-                </>
-              )}
-            </button>
+              {/* Native Print Button */}
+              <button
+                onClick={handlePrint}
+                disabled={isExporting}
+                className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center space-x-1.5 transition-colors"
+                title="Native Print"
+              >
+                <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Print</span>
+              </button>
 
-            {/* Close Button */}
-            <button
-              onClick={onClose}
-              disabled={isExporting}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+              {/* Download PDF Button */}
+              <button
+                onClick={handleDownloadPdf}
+                disabled={isExporting}
+                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-black flex items-center space-x-1.5 shadow-lg shadow-amber-500/20 active:scale-95 transition-all disabled:opacity-50 whitespace-nowrap"
+              >
+                {isExporting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span className="text-[11px] sm:text-xs">
+                      {exportStep === 'PREPARING_FONTS' && 'Fonts...'}
+                      {exportStep === 'RENDERING_CANVAS' && 'Rendering...'}
+                      {exportStep === 'COMPILING_PDF' && 'Compiling...'}
+                      {exportStep === 'SAVING' && 'Saving...'}
+                      {!exportStep && 'Exporting...'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span>Download PDF</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Scrollable Preview Area */}
-        <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-slate-100 dark:bg-slate-950 flex justify-center">
-          
-          {/* Printable Document Container (A4 Layout Proportion: 800px fixed width) */}
+        <div 
+          ref={viewportRef}
+          className="flex-1 overflow-auto p-2 sm:p-6 bg-slate-100 dark:bg-slate-950 flex flex-col items-center"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          {/* Scaled stage reserving exact layout space */}
           <div 
-            ref={printContainerRef}
-            data-pdf-content="true"
-            className="w-[800px] min-h-[1123px] bg-white text-slate-900 p-8 shadow-xl border border-slate-200 flex flex-col justify-between"
+            className="pdf-preview-stage transition-transform duration-100"
             style={{
-              fontFamily: "'Inter', 'Noto Sans Telugu', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif",
-              WebkitFontSmoothing: 'antialiased',
-              colorScheme: 'light',
-              color: '#0f172a'
+              width: `${Math.round(800 * activeScale)}px`,
+              minHeight: `${Math.round(contentHeight * activeScale)}px`,
+              margin: '0 auto',
+              flexShrink: 0
             }}
           >
+            <div
+              style={{
+                width: '800px',
+                transform: `scale(${activeScale})`,
+                transformOrigin: 'top left',
+              }}
+            >
+              {/* Printable Document Container (A4 Layout Proportion: 800px fixed width) */}
+              <div 
+                ref={printContainerRef}
+                data-pdf-content="true"
+                className="w-[800px] min-h-[1123px] bg-white text-slate-900 p-8 shadow-xl border border-slate-200 flex flex-col justify-between"
+                style={{
+                  fontFamily: "'Inter', 'Noto Sans Telugu', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif",
+                  WebkitFontSmoothing: 'antialiased',
+                  colorScheme: 'light',
+                  color: '#0f172a'
+                }}
+              >
             <div>
               {/* HEADER: Jewelry Store Brand & Statement Title */}
               <div className="border-b-2 border-amber-600 pb-5 mb-6">
@@ -763,6 +893,8 @@ export function JewelryPdfStatementModal({
               </div>
             </div>
 
+          </div>
+            </div>
           </div>
         </div>
 

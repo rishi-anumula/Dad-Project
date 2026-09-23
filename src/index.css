@@ -91,8 +91,40 @@
   body {
     background: white !important;
     color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
-  .no-print {
+  .no-print,
+  .print-hidden {
     display: none !important;
+  }
+
+  /* Isolate PDF Statement container for clean edge-to-edge printing */
+  [data-pdf-content="true"] {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    box-shadow: none !important;
+    border: none !important;
+    transform: none !important;
+  }
+
+  .pdf-modal-backdrop {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  .pdf-modal-card {
+    border: none !important;
+    box-shadow: none !important;
+    max-height: none !important;
+    background: transparent !important;
   }
 }
