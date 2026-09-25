@@ -58,6 +58,40 @@
   border: 1px solid rgba(30, 41, 59, 0.8);
 }
 
+/* ------------------------------------------------------------------ */
+/* Shop Preference accent system ("Shop preference -> UI")            */
+/* CSS variables are set live by PreferencesContext from the chosen   */
+/* accent preset, and consumed through the utility classes below.     */
+/* ------------------------------------------------------------------ */
+:root {
+  --accent-50: #fffbeb;
+  --accent-100: #fef3c7;
+  --accent-300: #fcd34d;
+  --accent-500: #f59e0b;
+  --accent-600: #d97706;
+  --accent-700: #b45309;
+  --accent-glow-c: rgba(245, 158, 11, 0.35);
+}
+
+.accent-bg { background-color: var(--accent-500); }
+.accent-bg-soft { background-color: var(--accent-100); }
+.accent-text { color: var(--accent-600); }
+.dark .accent-text { color: var(--accent-500); }
+.accent-border { border-color: var(--accent-500) !important; }
+.accent-grad {
+  background-image: linear-gradient(to top right, var(--accent-500), var(--accent-600), var(--accent-700));
+}
+.accent-glow { box-shadow: 0 8px 24px -6px var(--accent-glow-c); }
+
+/* AI Chatbot typing indicator */
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+.typing-dot {
+  animation: typingBounce 1.1s infinite ease-in-out;
+}
+
 /* Smooth custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

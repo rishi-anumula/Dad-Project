@@ -3,36 +3,39 @@ import { useNavigate } from 'react-router-dom';
 import { useLedger } from '../context/LedgerContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { usePreferences } from '../context/PreferencesContext';
 import { LanguageSelector } from './LanguageSelector';
-import { 
-  BookOpen, 
-  Sun, 
-  Moon, 
-  FileSpreadsheet, 
-  Database, 
-  Edit2, 
-  Check, 
-  Sparkles, 
-  Coins, 
-  LayoutDashboard, 
+import {
+  BookOpen,
+  Sun,
+  Moon,
+  FileSpreadsheet,
+  Database,
+  Edit2,
+  Check,
+  Sparkles,
+  Coins,
+  LayoutDashboard,
   Gem,
   Lock,
-  LogOut
+  LogOut,
+  Settings
 } from 'lucide-react';
 import { generateBusinessPdfReport } from '../utils/pdfGenerator';
 
 export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
-  const { 
-    businessName, 
-    setBusinessName, 
-    darkMode, 
-    setDarkMode, 
-    customers, 
+  const {
+    businessName,
+    setBusinessName,
+    darkMode,
+    setDarkMode,
+    customers,
     seedSampleData,
     bullionRates,
     isLiveConnected
   } = useLedger();
 
+  const { preferences } = usePreferences();
   const { t } = useLanguage();
   const { lockApp, logout, user } = useAuth();
   const navigate = useNavigate();
@@ -65,7 +68,7 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
         
         {/* Brand & Business Title */}
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20">
+          <div className="w-10 h-10 rounded-xl accent-grad flex items-center justify-center text-white shadow-md accent-glow">
             <Coins className="w-5 h-5" />
           </div>
 
@@ -100,7 +103,7 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
               </div>
             )}
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              {t('nav.subBrand')}
+              {preferences.tagline || t('nav.subBrand')}
             </p>
           </div>
         </div>
@@ -185,6 +188,16 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
             <span className="hidden sm:inline">{t('nav.backupRestore')}</span>
           </button>
 
+          {/* Feature: Shop Preferences (drives the UI) */}
+          <button
+            onClick={() => navigate('/preferences')}
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            title="Shop Preferences"
+          >
+            <Settings className="w-3.5 h-3.5 accent-text" />
+            <span className="hidden sm:inline">Preferences</span>
+          </button>
+
           {/* Dark / Light Mode Toggle */}
           <button
             onClick={() => setDarkMode(!darkMode)}
@@ -246,6 +259,13 @@ export function Navbar({ activeTab, setActiveTab, onOpenBackupModal }) {
         >
           <Coins className="w-3.5 h-3.5" />
           <span>{t('nav.liveRates')}</span>
+        </button>
+        <button
+          onClick={() => navigate('/preferences')}
+          className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400"
+        >
+          <Settings className="w-3.5 h-3.5" />
+          <span>Prefs</span>
         </button>
       </div>
     </header>

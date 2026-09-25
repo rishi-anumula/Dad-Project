@@ -338,8 +338,11 @@ export default defineConfig({
   base: './',
   plugins: [react(), liveBullionApiPlugin()],
   server: {
+    host: true,
     port: 3000,
-    open: true
+    // Allow the sandbox preview proxy host to reach the dev server
+    allowedHosts: true,
+    open: false
   },
   build: {
     outDir: 'dist',
