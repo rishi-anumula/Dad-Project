@@ -3,6 +3,8 @@ import { useLedger } from '../context/LedgerContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { calculateMetalValuation } from '../utils/bullionRatesApi';
+import { RateTrends } from './RateTrends';
+import { ExpectedPrices } from './ExpectedPrices';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -493,6 +495,12 @@ export function LiveBullionRates() {
         </div>
 
       </div>
+
+      {/* Feature: Live prices -> Current trends (history chart + stats + forecast) */}
+      <RateTrends />
+
+      {/* Feature: Expected prices for upcoming products */}
+      <ExpectedPrices />
 
       {/* Admin Manual Override Modal */}
       {isOverrideModalOpen && (

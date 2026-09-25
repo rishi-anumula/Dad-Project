@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'r
 import { LedgerProvider } from './context/LedgerContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
+import { PreferencesProvider } from './context/PreferencesContext';
 import { AuthGuard } from './components/AuthGuard';
 import { GoogleLoginScreen } from './components/GoogleLoginScreen';
 import { BiometricPinOverlay } from './components/BiometricPinOverlay';
@@ -17,6 +18,9 @@ import { CustomerDetailModal } from './components/CustomerDetailModal';
 import { AddCustomerModal } from './components/AddCustomerModal';
 import { AddTransactionModal } from './components/AddTransactionModal';
 import { BackupRestoreModal } from './components/BackupRestoreModal';
+import { OnboardingWizard } from './components/OnboardingWizard';
+import { ShopPreferences } from './components/ShopPreferences';
+import { AiChatbot } from './components/AiChatbot';
 
 function MainAppContent() {
   const location = useLocation();
@@ -131,6 +135,9 @@ function MainAppContent() {
       {/* Persistent Biometric / Fingerprint & PIN Lock Overlay */}
       <BiometricPinOverlay />
 
+      {/* Feature: AI Chatbot — floating assistant available on every tab */}
+      <AiChatbot />
+
     </div>
   );
 }
@@ -138,63 +145,85 @@ function MainAppContent() {
 export default function App() {
   return (
     <LanguageProvider>
-      <LedgerProvider>
-        <AuthProvider>
-          <HashRouter>
-            <Routes>
-              {/* Public Google Sign-In Screen */}
-              <Route path="/login" element={<GoogleLoginScreen />} />
-              <Route path="/landing" element={<LandingPage />} />
+      <PreferencesProvider>
+        <LedgerProvider>
+          <AuthProvider>
+            <HashRouter>
+              <Routes>
+                {/* Public Google Sign-In Screen */}
+                <Route path="/login" element={<GoogleLoginScreen />} />
+                <Route path="/landing" element={<LandingPage />} />
 
-              {/* Protected Dashboard & Ledger Routes */}
-              <Route 
-                path="/dashboard" 
-                element={
-                  <AuthGuard>
-                    <MainAppContent />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/customers" 
-                element={
-                  <AuthGuard>
-                    <MainAppContent />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/catalog" 
-                element={
-                  <AuthGuard>
-                    <MainAppContent />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/items" 
-                element={
-                  <AuthGuard>
-                    <MainAppContent />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/rates" 
-                element={
-                  <AuthGuard>
-                    <MainAppContent />
-                  </AuthGuard>
-                } 
-              />
+                {/* Feature: Login -> Shop Preferences onboarding wizard */}
+                <Route
+                  path="/onboarding"
+                  element={
+                    <AuthGuard>
+                      <OnboardingWizard />
+                    </AuthGuard>
+                  }
+                />
 
-              {/* Default & Wildcard Redirects */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </HashRouter>
-        </AuthProvider>
-      </LedgerProvider>
+                {/* Feature: full Shop Preferences page (drives the UI) */}
+                <Route
+                  path="/preferences"
+                  element={
+                    <AuthGuard>
+                      <ShopPreferences />
+                    </AuthGuard>
+                  }
+                />
+
+                {/* Protected Dashboard & Ledger Routes */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <AuthGuard>
+                      <MainAppContent />
+                    </AuthGuard>
+                  }
+                />
+                <Route
+                  path="/customers"
+                  element={
+                    <AuthGuard>
+                      <MainAppContent />
+                    </AuthGuard>
+                  }
+                />
+                <Route
+                  path="/catalog"
+                  element={
+                    <AuthGuard>
+                      <MainAppContent />
+                    </AuthGuard>
+                  }
+                />
+                <Route
+                  path="/items"
+                  element={
+                    <AuthGuard>
+                      <MainAppContent />
+                    </AuthGuard>
+                  }
+                />
+                <Route
+                  path="/rates"
+                  element={
+                    <AuthGuard>
+                      <MainAppContent />
+                    </AuthGuard>
+                  }
+                />
+
+                {/* Default & Wildcard Redirects */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </HashRouter>
+          </AuthProvider>
+        </LedgerProvider>
+      </PreferencesProvider>
     </LanguageProvider>
   );
 }

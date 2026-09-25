@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { fetchLiveBullionRates } from '../utils/bullionRatesApi';
+import { recordRateSnapshot } from '../utils/rateHistory';
 
 const LedgerContext = createContext();
 
@@ -281,6 +282,9 @@ export function LedgerProvider({ children }) {
         setBullionRates(data.rates);
         setRatesLastUpdated(data.timestamp || new Date().toISOString());
         setIsLiveConnected(Boolean(data.isLiveConnected && !data.isOffline));
+        // Feature "Live prices -> Current trends": store a daily snapshot so the
+        // Trends chart & Expected Prices forecast grow more accurate every day.
+        recordRateSnapshot(cityToFetch, data.rates, data.timestamp);
       }
     } catch (err) {
       console.warn("Could not fetch latest rates, keeping cached data intact", err);

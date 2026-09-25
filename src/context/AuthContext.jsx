@@ -20,7 +20,10 @@ const DEFAULT_SHOP_PROFILE = {
   city: 'hyderabad',
   gstin: '',
   address: '',
-  isConfigured: false
+  isConfigured: false,
+  // Feature: "Login page -> Shop preferences".
+  // New users are routed through the OnboardingWizard until this is true.
+  preferencesCompleted: false
 };
 
 export function AuthProvider({ children }) {
@@ -75,7 +78,8 @@ export function AuthProvider({ children }) {
         city: 'hyderabad',
         gstin: '',
         address: '',
-        isConfigured: true
+        isConfigured: true,
+        preferencesCompleted: false // first-time Google users see the Shop Preferences wizard
       };
       await secureStorage.set(STORAGE_KEYS.SHOP_PROFILE, defaultShop);
       localStorage.setItem('khatabook_business_name', defaultShop.shopName);
@@ -290,7 +294,6 @@ export function AuthProvider({ children }) {
       address: address?.trim() || '',
       isConfigured: true
     };
-
     await secureStorage.set(STORAGE_KEYS.SHOP_PROFILE, newShop);
     localStorage.setItem('khatabook_business_name', newShop.shopName);
     setShopProfile(newShop);
@@ -306,6 +309,21 @@ export function AuthProvider({ children }) {
     setIsLocked(false);
 
     return { success: true, shopProfile: newShop };
+  };
+
+  /**
+   * Merge-update the shop profile (persists via secureStorage).
+   * Used by OnboardingWizard & ShopPreferences to save partial changes,
+   * including the `preferencesCompleted` flag that gates the dashboard.
+   */
+  const updateShopProfile = async (partial) => {
+    let updated = { ...DEFAULT_SHOP_PROFILE, ...(shopProfile || {}), ...(partial || {}) };
+    setShopProfile(updated);
+    await secureStorage.set(STORAGE_KEYS.SHOP_PROFILE, updated);
+    if (partial?.shopName) {
+      localStorage.setItem('khatabook_business_name', partial.shopName.trim());
+    }
+    return updated;
   };
 
   /**
@@ -581,6 +599,7 @@ export function AuthProvider({ children }) {
         verifyPin,
         setupBackupPin,
         completeBusinessOnboarding,
+        updateShopProfile,
         resetBusinessProfileForTesting,
         lockApp,
         logout,
