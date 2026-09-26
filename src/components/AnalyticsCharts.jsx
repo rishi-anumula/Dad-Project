@@ -27,19 +27,19 @@ ChartJS.register(
 export function AnalyticsCharts() {
   const { totalYouWillGet, totalYouWillGive, customers, darkMode } = useLedger();
 
-  // Doughnut Chart Data
+  // Doughnut Chart Data — "Dark & Gold Luxury" jewel tones
   const doughnutData = {
     labels: ["You'll Get", "You'll Give"],
     datasets: [
       {
         data: [totalYouWillGet, totalYouWillGive],
         backgroundColor: [
-          'rgba(239, 68, 68, 0.85)', // Red
-          'rgba(34, 197, 94, 0.85)', // Green
+          'rgba(201, 151, 12, 0.9)',   // Gold
+          'rgba(21, 154, 98, 0.9)',    // Emerald
         ],
         borderColor: [
-          'rgba(239, 68, 68, 1)',
-          'rgba(34, 197, 94, 1)',
+          'rgba(201, 151, 12, 1)',
+          'rgba(21, 154, 98, 1)',
         ],
         borderWidth: 1,
       },
@@ -59,7 +59,7 @@ export function AnalyticsCharts() {
         label: 'Net Balance (₹)',
         data: sortedCustomers.map(c => c.netBalance),
         backgroundColor: sortedCustomers.map(c => 
-          c.netBalance >= 0 ? 'rgba(239, 68, 68, 0.85)' : 'rgba(34, 197, 94, 0.85)'
+          c.netBalance >= 0 ? 'rgba(201, 151, 12, 0.9)' : 'rgba(21, 154, 98, 0.9)'
         ),
         borderRadius: 6,
       },
@@ -72,7 +72,7 @@ export function AnalyticsCharts() {
     plugins: {
       legend: {
         labels: {
-          color: darkMode ? '#cbd5e1' : '#475569',
+          color: darkMode ? '#d5ccba' : '#5f5749',
           font: { family: 'Inter', size: 12 }
         }
       },
@@ -84,15 +84,15 @@ export function AnalyticsCharts() {
     },
     scales: {
       x: {
-        ticks: { color: darkMode ? '#94a3b8' : '#64748b' },
-        grid: { color: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }
+        ticks: { color: darkMode ? '#a89f8c' : '#7e7565' },
+        grid: { color: darkMode ? 'rgba(233,199,107,0.07)' : 'rgba(95,87,73,0.08)' }
       },
       y: {
         ticks: { 
-          color: darkMode ? '#94a3b8' : '#64748b',
+          color: darkMode ? '#a89f8c' : '#7e7565',
           callback: (val) => `₹ ${val}`
         },
-        grid: { color: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }
+        grid: { color: darkMode ? 'rgba(233,199,107,0.07)' : 'rgba(95,87,73,0.08)' }
       }
     }
   };
@@ -120,7 +120,7 @@ export function AnalyticsCharts() {
                 plugins: {
                   legend: {
                     position: 'bottom',
-                    labels: { color: darkMode ? '#cbd5e1' : '#475569' }
+                    labels: { color: darkMode ? '#d5ccba' : '#5f5749' }
                   }
                 }
               }} 

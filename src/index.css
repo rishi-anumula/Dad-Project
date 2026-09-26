@@ -43,19 +43,36 @@
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
 }
 
-/* Custom Glassmorphism effects */
+/* Custom Glassmorphism effects — warm "Dark & Gold Luxury" surfaces */
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(252, 250, 245, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid rgba(231, 225, 212, 0.9);
 }
 
 .dark .glass-card {
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(23, 20, 14, 0.86);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(71, 65, 53, 0.7);
+}
+
+body {
+  background-color: #faf9f5;
+}
+
+.dark body {
+  background-color: #131109;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(168, 159, 140, 0.45);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 151, 12, 0.6);
 }
 
 /* ------------------------------------------------------------------ */
@@ -92,7 +109,7 @@
   animation: typingBounce 1.1s infinite ease-in-out;
 }
 
-/* Smooth custom scrollbars */
+/* Smooth custom scrollbars (warm gold hover set above) */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -100,15 +117,6 @@
 
 ::-webkit-scrollbar-track {
   background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.4);
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.6);
 }
 
 /* Animations */

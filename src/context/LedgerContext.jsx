@@ -179,7 +179,8 @@ export function LedgerProvider({ children }) {
   });
 
   const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('khatabook_theme') === 'dark';
+    // "Dark & Gold Luxury" theme: dark by default, explicit light choice respected
+    return localStorage.getItem('khatabook_theme') !== 'light';
   });
 
   const [customers, setCustomers] = useState(() => {

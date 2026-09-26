@@ -58,8 +58,8 @@ export function RateTrends() {
   const stats = analysis.stats;
   const forecast = analysis.forecast;
   const isUp = stats.direction === 'UP';
-  const gridColor = darkMode ? 'rgba(148,163,184,0.12)' : 'rgba(100,116,139,0.12)';
-  const tickColor = darkMode ? '#94a3b8' : '#64748b';
+  const gridColor = darkMode ? 'rgba(233,199,107,0.09)' : 'rgba(95,87,73,0.12)';
+  const tickColor = darkMode ? '#a89f8c' : '#7e7565';
 
   // Show last 90 days history + forecast horizon
   const historyPoints = analysis.points.slice(-90);
@@ -88,9 +88,9 @@ export function RateTrends() {
       {
         label: 'AI forecast',
         data: [...Array(labels.length - 1).fill(null), ...forecastValues],
-        borderColor: '#6366f1',
+        borderColor: '#e9c76b',
         borderDash: [6, 5],
-        backgroundColor: 'rgba(99,102,241,0.06)',
+        backgroundColor: 'rgba(233,199,107,0.06)',
         fill: false,
         tension: 0.35,
         pointRadius: 0,
@@ -99,21 +99,21 @@ export function RateTrends() {
       {
         label: 'Upper band',
         data: [...Array(labels.length - 1).fill(null), ...forecastHi],
-        borderColor: 'rgba(99,102,241,0.18)',
+        borderColor: 'rgba(233,199,107,0.22)',
         borderWidth: 1,
         pointRadius: 0,
         fill: '+1',
-        backgroundColor: 'rgba(99,102,241,0.10)',
+        backgroundColor: 'rgba(233,199,107,0.12)',
         tension: 0.35
       },
       {
         label: 'Lower band',
         data: [...Array(labels.length - 1).fill(null), ...forecastLo],
-        borderColor: 'rgba(99,102,241,0.18)',
+        borderColor: 'rgba(233,199,107,0.22)',
         borderWidth: 1,
         pointRadius: 0,
         fill: false,
-        backgroundColor: 'rgba(99,102,241,0.10)',
+        backgroundColor: 'rgba(233,199,107,0.12)',
         tension: 0.35
       }
     ]
@@ -126,9 +126,9 @@ export function RateTrends() {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: darkMode ? '#0f172a' : '#ffffff',
-        titleColor: darkMode ? '#e2e8f0' : '#0f172a',
-        bodyColor: darkMode ? '#cbd5e1' : '#334155',
+        backgroundColor: darkMode ? '#1f1b15' : '#faf9f5',
+        titleColor: darkMode ? '#f3f0e9' : '#1f1b15',
+        bodyColor: darkMode ? '#d5ccba' : '#5f5749',
         borderColor: gridColor,
         borderWidth: 1,
         padding: 10,
@@ -232,7 +232,7 @@ export function RateTrends() {
               <span className="w-4 h-0.5 bg-amber-500 rounded inline-block"></span> History
             </span>
             <span className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300">
-              <span className="w-4 h-0.5 bg-indigo-500 rounded inline-block" style={{ backgroundImage: 'repeating-linear-gradient(90deg,#6366f1 0 4px,transparent 4px 7px)' }}></span> AI Forecast
+              <span className="w-4 h-0.5 bg-indigo-500 rounded inline-block" style={{ backgroundImage: 'repeating-linear-gradient(90deg,#e9c76b 0 4px,transparent 4px 7px)' }}></span> AI Forecast
             </span>
           </div>
           <div className="flex items-center space-x-2">

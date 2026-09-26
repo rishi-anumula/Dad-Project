@@ -15,8 +15,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 const PREFS_KEY = 'khatabook_shop_preferences_v1';
 
 export const ACCENT_PRESETS = {
-  amber:   { name: 'Royal Gold',  50: '#fffbeb', 100: '#fef3c7', 300: '#fcd34d', 500: '#f59e0b', 600: '#d97706', 700: '#b45309', glow: 'rgba(245,158,11,0.35)' },
-  indigo:  { name: 'Classic Indigo', 50: '#eef2ff', 100: '#e0e7ff', 300: '#a5b4fc', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', glow: 'rgba(99,102,241,0.35)' },
+  amber:   { name: 'Royal Gold',  50: '#fdf9ec', 100: '#f9efd2', 300: '#e9c76b', 500: '#c9970c', 600: '#a67c08', 700: '#87640c', glow: 'rgba(212,175,55,0.4)' },
+  indigo:  { name: 'Champagne Night', 50: '#f5f3ff', 100: '#ede9fe', 300: '#c4b5fd', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9', glow: 'rgba(139,92,246,0.35)' },
   emerald: { name: 'Emerald',     50: '#ecfdf5', 100: '#d1fae5', 300: '#6ee7b7', 500: '#10b981', 600: '#059669', 700: '#047857', glow: 'rgba(16,185,129,0.35)' },
   rose:    { name: 'Rose',        50: '#fff1f2', 100: '#ffe4e6', 300: '#fda4af', 500: '#f43f5e', 600: '#e11d48', 700: '#be123c', glow: 'rgba(244,63,94,0.35)' },
   sky:     { name: 'Sky',         50: '#f0f9ff', 100: '#e0f2fe', 300: '#7dd3fc', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', glow: 'rgba(14,165,233,0.35)' },
